@@ -1,0 +1,11 @@
+{
+  "compiler_version": "0.0.1-go-bootstrap",
+  "dependency_graph": {
+    "test.ship": []
+  },
+  "source_hashes": {
+    "test.ship": "sha256:dummy"
+  },
+  "target_architecture": "x86_64-elf",
+  "type_ledger": []
+}
