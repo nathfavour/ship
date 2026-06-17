@@ -50,6 +50,8 @@ const (
 	RETURN   Type = "return"
 	IF       Type = "if"
 	NEW      Type = "new" // Included for completeness, though ARCHITECTURE says "new does not exist" as implicit.
+	TRUE     Type = "true"
+	FALSE    Type = "false"
 )
 
 type Token struct {
@@ -82,6 +84,4 @@ func LookupIdent(ident string) Type {
 		return tok
 	}
 	return IDENT
-}
-n IDENT
 }
