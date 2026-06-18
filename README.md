@@ -22,6 +22,7 @@ Modern toolchains are plagued by accidental complexity: bloated compilation time
 ## Quick Start
 
 ### Using AnyIsland (Recommended)
+You'll need to install the [AnyIsland Package Manager](https://github.com/nathfavour/anyisland) first. Once AnyIsland is set up, installing Ship is instant:
 ```bash
 anyisland install nathfavour/ship
 ```
@@ -33,9 +34,40 @@ git clone https://github.com/nathfavour/ship.git
 cd ship
 go build -o ship ./cmd/ship
 
-./ship test.ship
-./a.out
+ship run file.ship
 ```
+
+## Language Syntax at a Glance
+
+Ship's syntax is strictly typed, explicit, and C-like. Here is the entire language structure in a nutshell:
+
+```rust
+// 1. Structs (Strict linear memory alignment)
+type Transaction struct {
+    amount int
+    recipient string
+}
+
+// 2. Functions & Strong Typing
+fn process(x int, y int) -> int {
+    
+    // 3. Compile-Time Contracts
+    contract {
+        require: x > 0
+        ensure: x != 100
+    }
+
+    // 4. Variables & Control Flow
+    let sum = x + y;
+    if (sum > 50) {
+        return sum;
+    } else {
+        return 0;
+    }
+}
+```
+
+For the complete breakdown, view the [Syntax Reference Guide](https://github.com/nathfavour/ship/blob/master/docs/syntax.md).
 
 ## Architecture
 
