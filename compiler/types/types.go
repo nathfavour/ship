@@ -3,8 +3,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/nathfavour/ship/internal/ast"
-	"github.com/nathfavour/ship/internal/token"
+	"github.com/nathfavour/ship/compiler/ast"
+	"github.com/nathfavour/ship/compiler/token"
 )
 
 // Type represents a resolved type in the Ship language.

@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/nathfavour/ship/internal/token"
+import "github.com/nathfavour/ship/compiler/token"
 
 type Node interface {
 	Pos() token.Token

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/nathfavour/ship/internal/ast"
-	"github.com/nathfavour/ship/internal/lexer"
-	"github.com/nathfavour/ship/internal/token"
+	"github.com/nathfavour/ship/compiler/ast"
+	"github.com/nathfavour/ship/compiler/lexer"
+	"github.com/nathfavour/ship/compiler/token"
 )
 
 const (

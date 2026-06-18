@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/nathfavour/ship/internal/ir"
+	"github.com/nathfavour/ship/compiler/ir"
 )
 
 // ELF64 Headers and Definitions

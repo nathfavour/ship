@@ -3,7 +3,7 @@ package ir
 import (
 	"fmt"
 
-	"github.com/nathfavour/ship/internal/ast"
+	"github.com/nathfavour/ship/compiler/ast"
 )
 
 type Lowerer struct {

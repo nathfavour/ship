@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"github.com/nathfavour/ship/internal/token"
+	"github.com/nathfavour/ship/compiler/token"
 )
 
 type Lexer struct {

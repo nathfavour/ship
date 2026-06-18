@@ -3,8 +3,8 @@ package types
 import (
 	"testing"
 
-	"github.com/nathfavour/ship/internal/lexer"
-	"github.com/nathfavour/ship/internal/parser"
+	"github.com/nathfavour/ship/compiler/lexer"
+	"github.com/nathfavour/ship/compiler/parser"
 )
 
 func TestTypeCheck(t *testing.T) {

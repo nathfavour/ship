@@ -16,7 +16,7 @@ Ensure you have Go 1.25.5 or later installed.
 ```bash
 git clone https://github.com/nathfavour/ship.git
 cd ship
-go build -o ship ./cmd/ship
+go build -o ship ./cli/ship
 ```
 
 ## Your First Ship Program

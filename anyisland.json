@@ -4,7 +4,7 @@
   "description": "A systems programming language and toolchain engineered from first principles for the agentic era.",
   "build": {
     "steps": [
-      "go build -v -o ship ./cmd/ship"
+      "go build -v -o ship ./cli/ship"
     ],
     "bin": "ship"
   },

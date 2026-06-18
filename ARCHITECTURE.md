@@ -18,9 +18,9 @@ The repository is organized as a strict, flat monorepo. Dependencies between pac
 
 ```text
 ship/
-├── cmd/
+├── cli/                       # Command Line Interface Workspace Module
 │   └── ship/                  # CLI Entry point (main.go) -> Handles flags, orchestrates phases
-├── internal/                  # Isolated Compiler Subsystems (Internal to compiler binary)
+├── compiler/                  # Core Compiler Workspace Module
 │   ├── token/                 # Keywords, operators, literals definitions
 │   ├── lexer/                 # Lexical Analysis: Raw bytes -> Token stream
 │   ├── ast/                   # Abstract Syntax Tree Node Definitions
@@ -33,6 +33,7 @@ ship/
 │   │   ├── pe/                # x86_64 PE format encoder (Windows)
 │   │   └── wasm/              # WebAssembly bytecode encoder
 │   └── agent/                 # Machine-first diagnostics stream & .shipmap manifest engine
+├── lsp/                       # Language Server Protocol Workspace Module (Daemon)
 ├── std/                       # The Ship Standard Library (Written completely in .ship)
 │   ├── core/                  # Bare-metal fundamentals, string primitives, sys-call boundaries
 │   ├── memory/                # Standard Manual Allocators (Arena, Page, Heap boundary)

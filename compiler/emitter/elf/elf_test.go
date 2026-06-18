@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/nathfavour/ship/internal/ir"
+	"github.com/nathfavour/ship/compiler/ir"
 )
 
 func TestElfEmission(t *testing.T) {
