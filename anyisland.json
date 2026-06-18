@@ -1,0 +1,15 @@
+{
+  "name": "ship",
+  "version": "0.0.1",
+  "description": "A systems programming language and toolchain engineered from first principles for the agentic era.",
+  "build": {
+    "steps": [
+      "go build -v -o ship ./cmd/ship"
+    ],
+    "bin": "ship"
+  },
+  "runtime": {
+    "pulse": true
+  },
+  "repository": "github.com/nathfavour/ship"
+}
