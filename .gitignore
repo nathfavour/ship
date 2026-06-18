@@ -1,5 +1,6 @@
 # Binaries
 /ship
+/cli/ship/ship
 a.out
 *.out
 *.exe
