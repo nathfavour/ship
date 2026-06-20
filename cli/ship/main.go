@@ -9,10 +9,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
 	"github.com/nathfavour/ship/compiler/emitter/elf"
+	"github.com/nathfavour/ship/compiler/emitter/macho"
+	"github.com/nathfavour/ship/compiler/emitter/pe"
+	"github.com/nathfavour/ship/compiler/emitter/wasm"
 	"github.com/nathfavour/ship/compiler/ir"
 	"github.com/nathfavour/ship/compiler/lexer"
 	"github.com/nathfavour/ship/compiler/parser"
@@ -57,7 +61,7 @@ func main() {
 	default:
 		// If the command argument is a file that exists or has a .ship extension, run it directly
 		if _, err := os.Stat(command); err == nil || filepath.Ext(command) == ".ship" {
-			runFile(command, false)
+			runFile(command, getDefaultTarget(), false)
 			return
 		}
 		fmt.Fprintf(os.Stderr, "ship: unknown command %q\n", command)
@@ -66,10 +70,22 @@ func main() {
 	}
 }
 
+func getDefaultTarget() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "macho"
+	case "windows":
+		return "pe"
+	default:
+		return "elf"
+	}
+}
+
 func buildCmd() {
 	buildFlags := flag.NewFlagSet("build", flag.ExitOnError)
 	agentFlag := buildFlags.Bool("agent", false, "Enable machine-first diagnostic stream (JSON)")
 	outputFlag := buildFlags.String("o", "a.out", "Output executable file")
+	targetFlag := buildFlags.String("target", getDefaultTarget(), "Target executable format: elf (Linux), macho (macOS), pe (Windows), wasm (WebAssembly)")
 
 	buildFlags.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: ship build [options] <file.ship>")
@@ -84,7 +100,7 @@ func buildCmd() {
 	}
 
 	inputFile := buildFlags.Arg(0)
-	compile(inputFile, *outputFlag, *agentFlag, false)
+	compile(inputFile, *outputFlag, *targetFlag, *agentFlag, false)
 }
 
 func runCmd() {
@@ -104,7 +120,7 @@ func runCmd() {
 	}
 
 	inputFile := runFlags.Arg(0)
-	runFile(inputFile, *agentFlag)
+	runFile(inputFile, getDefaultTarget(), *agentFlag)
 }
 
 func getBuildDir() string {
@@ -120,12 +136,12 @@ func getBuildDir() string {
 	return shipBuildDir
 }
 
-func runFile(inputFile string, agent bool) {
+func runFile(inputFile string, target string, agent bool) {
 	buildDir := getBuildDir()
 	outputFile := filepath.Join(buildDir, "ship_run_"+filepath.Base(inputFile)+".out")
 
 	// Compile silently unless agent flag is used (but run has its own output)
-	compile(inputFile, outputFile, agent, true)
+	compile(inputFile, outputFile, target, agent, true)
 
 	// Execute the compiled binary
 	cmd := exec.Command(outputFile)
@@ -178,7 +194,7 @@ func resolveInputFile(inputFile string) ([]byte, string, error) {
 	return nil, "", fmt.Errorf("file not found locally, in anyisland, or on GitHub")
 }
 
-func compile(inputFile, outputFile string, agent bool, isRunCommand bool) {
+func compile(inputFile, outputFile string, target string, agent bool, isRunCommand bool) {
 	bytes, resolvedPath, err := resolveInputFile(inputFile)
 	if err != nil {
 		fatalError(fmt.Sprintf("Could not resolve source file: %s", err), agent)
@@ -223,11 +239,27 @@ func compile(inputFile, outputFile string, agent bool, isRunCommand bool) {
 	lowerer := ir.NewLowerer(checker.VarTypes)
 	program := lowerer.LowerFile(astFile)
 
-	// 5. Emit ELF
-	emitter := elf.New(program)
-	binaryBytes, err := emitter.Emit()
+	// 5. Emit based on target
+	var binaryBytes []byte
+	switch target {
+	case "elf":
+		emitter := elf.New(program)
+		binaryBytes, err = emitter.Emit()
+	case "macho":
+		emitter := macho.New(program)
+		binaryBytes, err = emitter.Emit()
+	case "pe":
+		emitter := pe.New(program)
+		binaryBytes, err = emitter.Emit()
+	case "wasm":
+		emitter := wasm.New(program)
+		binaryBytes, err = emitter.Emit()
+	default:
+		fatalError(fmt.Sprintf("Unsupported target: %s", target), agent)
+	}
+
 	if err != nil {
-		fatalError(fmt.Sprintf("Failed to emit ELF: %s", err), agent)
+		fatalError(fmt.Sprintf("Failed to emit binary: %s", err), agent)
 	}
 
 	err = os.WriteFile(outputFile, binaryBytes, 0755)
