@@ -82,7 +82,7 @@ func (e *Env) Get(name string) (Type, bool) {
 type Checker struct {
 	globalEnv    *Env
 	currentEnv   *Env
-	structs      map[string]*StructType
+	Structs      map[string]*StructType
 	errors       []*CheckerError
 	currentFile  string
 	currentFunc  string
@@ -97,7 +97,7 @@ func NewChecker() *Checker {
 	return &Checker{
 		globalEnv:  env,
 		currentEnv: env,
-		structs:    make(map[string]*StructType),
+		Structs:    make(map[string]*StructType),
 		errors:     []*CheckerError{},
 		VarTypes:   make(map[string]string),
 	}
@@ -165,7 +165,7 @@ func (c *Checker) checkStructDecl(s *ast.StructDecl) {
 		offset += fieldType.SizeBytes()
 	}
 	st.size = offset
-	c.structs[s.Name.Literal] = st
+	c.Structs[s.Name.Literal] = st
 }
 
 func (c *Checker) resolveTypeName(tok token.Token) Type {
@@ -177,7 +177,7 @@ func (c *Checker) resolveTypeName(tok token.Token) Type {
 	case "bool":
 		return BoolType
 	}
-	if st, ok := c.structs[tok.Literal]; ok {
+	if st, ok := c.Structs[tok.Literal]; ok {
 		return st
 	}
 	return nil
@@ -282,6 +282,15 @@ func (c *Checker) checkExpression(exp ast.Expression) Type {
 	case *ast.PrefixExpression:
 		return c.checkExpression(e.Right)
 	case *ast.InfixExpression:
+		if e.Operator == "=" {
+			switch e.Left.(type) {
+			case *ast.Identifier, *ast.SelectorExpression:
+				// Valid assignable expression (lvalue)
+			default:
+				c.reportError("INVALID_LVALUE", e.Token, map[string]interface{}{})
+				return nil
+			}
+		}
 		left := c.checkExpression(e.Left)
 		right := c.checkExpression(e.Right)
 		if left != right {

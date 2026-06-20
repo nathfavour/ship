@@ -236,7 +236,7 @@ func compile(inputFile, outputFile string, target string, agent bool, isRunComma
 	}
 
 	// 4. Lower to IR
-	lowerer := ir.NewLowerer(checker.VarTypes)
+	lowerer := ir.NewLowerer(checker.VarTypes, checker.Structs)
 	program := lowerer.LowerFile(astFile)
 
 	// 5. Emit based on target

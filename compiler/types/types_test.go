@@ -40,7 +40,7 @@ let c = a + b;
 	}
 
 	// Verify the struct was registered
-	st, ok := checker.structs["Person"]
+	st, ok := checker.Structs["Person"]
 	if !ok {
 		t.Fatalf("struct Person not found")
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/nathfavour/ship/compiler/lexer"
 	"github.com/nathfavour/ship/compiler/parser"
+	"github.com/nathfavour/ship/compiler/types"
 )
 
 func TestIRLowering(t *testing.T) {
@@ -22,7 +23,7 @@ let c = a + b;
 	p := parser.New(l)
 	file := p.ParseFile()
 
-	lowerer := NewLowerer(make(map[string]string))
+	lowerer := NewLowerer(make(map[string]string), make(map[string]*types.StructType))
 	program := lowerer.LowerFile(file)
 
 	out := program.String()

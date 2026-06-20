@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/nathfavour/ship/compiler/ast"
+	"github.com/nathfavour/ship/compiler/types"
 )
 
 type Lowerer struct {
@@ -12,12 +13,14 @@ type Lowerer struct {
 	regCounter   int
 	labelCounter int
 	varTypes     map[string]string
+	structs      map[string]*types.StructType
 }
 
-func NewLowerer(varTypes map[string]string) *Lowerer {
+func NewLowerer(varTypes map[string]string, structs map[string]*types.StructType) *Lowerer {
 	return &Lowerer{
 		program:  &Program{Instructions: []Instruction{}},
 		varTypes: varTypes,
+		structs:  structs,
 	}
 }
 
