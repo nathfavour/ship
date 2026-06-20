@@ -9,6 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/nathfavour/ship/compiler/emitter/elf"
 	"github.com/nathfavour/ship/compiler/ir"
@@ -258,12 +260,44 @@ func fatalError(msg string, agent bool) {
 
 func reportAgentErrors(phase string, errors []string) {
 	for _, msg := range errors {
-		out, _ := json.Marshal(map[string]interface{}{
-			"status": "error",
-			"phase":  phase,
-			"error":  msg,
-		})
-		fmt.Fprintln(os.Stderr, string(out))
+		file := ""
+		line := 0
+		col := 0
+		errMsg := msg
+
+		parts := strings.SplitN(msg, ":", 4)
+		if len(parts) >= 4 {
+			l, err1 := strconv.Atoi(parts[1])
+			c, err2 := strconv.Atoi(parts[2])
+			if err1 == nil && err2 == nil {
+				file = parts[0]
+				line = l
+				col = c
+				errMsg = strings.TrimSpace(parts[3])
+			}
+		}
+
+		if line > 0 {
+			out, _ := json.Marshal(map[string]interface{}{
+				"status": "error",
+				"phase":  phase,
+				"error":  errMsg,
+				"target": map[string]interface{}{
+					"file":     file,
+					"function": "",
+					"line":     line,
+					"char":     col,
+				},
+			})
+			fmt.Fprintln(os.Stderr, string(out))
+		} else {
+			out, _ := json.Marshal(map[string]interface{}{
+				"status": "error",
+				"phase":  phase,
+				"error":  msg,
+			})
+			fmt.Fprintln(os.Stderr, string(out))
+		}
 	}
 }
 
