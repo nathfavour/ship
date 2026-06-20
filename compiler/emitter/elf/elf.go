@@ -181,6 +181,19 @@ func (e *Emitter) generateTextSegment() []byte {
 				// offset = - (len + 1 + 7)
 				offset := -int32(len(strVal) + 1 + 7)
 				code = append32(code, offset)
+			} else if inst.Src1.Type == "deref" {
+				parts := strings.Split(inst.Src1.Value, ",")
+				varName := parts[0]
+				fieldOffset, _ := strconv.Atoi(parts[1])
+
+				ptrOffset := sc.getOffset(ir.Operand{Type: "variable", Value: varName})
+				// mov rbx, [rbp + ptrOffset]
+				code = append(code, 0x48, 0x8b, 0x9d)
+				code = append32(code, int32(ptrOffset))
+
+				// mov rax, [rbx + fieldOffset]
+				code = append(code, 0x48, 0x8b, 0x83)
+				code = append32(code, int32(fieldOffset))
 			} else {
 				srcOffset := sc.getOffset(inst.Src1)
 				// mov rax, [rbp + srcOffset]
@@ -192,14 +205,34 @@ func (e *Emitter) generateTextSegment() []byte {
 			code = append32(code, int32(destOffset))
 
 		case ir.OpStore:
-			srcOffset := sc.getOffset(inst.Src1)
-			destOffset := sc.getOffset(inst.Dest)
-			// mov rax, [rbp + srcOffset]
-			code = append(code, 0x48, 0x8b, 0x85)
-			code = append32(code, int32(srcOffset))
-			// mov [rbp + destOffset], rax
-			code = append(code, 0x48, 0x89, 0x85)
-			code = append32(code, int32(destOffset))
+			if inst.Dest.Type == "deref" {
+				parts := strings.Split(inst.Dest.Value, ",")
+				varName := parts[0]
+				fieldOffset, _ := strconv.Atoi(parts[1])
+
+				srcOffset := sc.getOffset(inst.Src1)
+				// mov rax, [rbp + srcOffset]
+				code = append(code, 0x48, 0x8b, 0x85)
+				code = append32(code, int32(srcOffset))
+
+				ptrOffset := sc.getOffset(ir.Operand{Type: "variable", Value: varName})
+				// mov rbx, [rbp + ptrOffset]
+				code = append(code, 0x48, 0x8b, 0x9d)
+				code = append32(code, int32(ptrOffset))
+
+				// mov [rbx + fieldOffset], rax
+				code = append(code, 0x48, 0x89, 0x83)
+				code = append32(code, int32(fieldOffset))
+			} else {
+				srcOffset := sc.getOffset(inst.Src1)
+				destOffset := sc.getOffset(inst.Dest)
+				// mov rax, [rbp + srcOffset]
+				code = append(code, 0x48, 0x8b, 0x85)
+				code = append32(code, int32(srcOffset))
+				// mov [rbp + destOffset], rax
+				code = append(code, 0x48, 0x89, 0x85)
+				code = append32(code, int32(destOffset))
+			}
 
 		case ir.OpAdd, ir.OpSub, ir.OpMul, ir.OpDiv, ir.OpEq, ir.OpNeq, ir.OpLt, ir.OpGt:
 			src1Offset := sc.getOffset(inst.Src1)
