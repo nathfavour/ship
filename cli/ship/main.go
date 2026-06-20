@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -143,16 +145,47 @@ func runFile(inputFile string, agent bool) {
 	}
 }
 
-func compile(inputFile, outputFile string, agent bool, isRunCommand bool) {
+func resolveInputFile(inputFile string) ([]byte, string, error) {
+	// 1. Try local path
 	bytes, err := os.ReadFile(inputFile)
+	if err == nil {
+		return bytes, inputFile, nil
+	}
+
+	// 2. Try anyisland source path
+	home, errHome := os.UserHomeDir()
+	if errHome == nil {
+		anyislandPath := filepath.Join(home, ".anyisland", "source", "github", "nathfavour", "ship", inputFile)
+		bytes, err = os.ReadFile(anyislandPath)
+		if err == nil {
+			return bytes, anyislandPath, nil
+		}
+	}
+
+	// 3. Try GitHub raw fetch
+	githubURL := fmt.Sprintf("https://raw.githubusercontent.com/nathfavour/ship/master/%s", filepath.ToSlash(inputFile))
+	resp, errGet := http.Get(githubURL)
+	if errGet == nil && resp.StatusCode == 200 {
+		defer resp.Body.Close()
+		bytes, errRead := io.ReadAll(resp.Body)
+		if errRead == nil {
+			return bytes, "github:" + inputFile, nil
+		}
+	}
+
+	return nil, "", fmt.Errorf("file not found locally, in anyisland, or on GitHub")
+}
+
+func compile(inputFile, outputFile string, agent bool, isRunCommand bool) {
+	bytes, resolvedPath, err := resolveInputFile(inputFile)
 	if err != nil {
-		fatalError(fmt.Sprintf("Could not read file: %s", err), agent)
+		fatalError(fmt.Sprintf("Could not resolve source file: %s", err), agent)
 	}
 
 	input := string(bytes)
 
 	// 1. Lex
-	l := lexer.New(inputFile, input)
+	l := lexer.New(resolvedPath, input)
 
 	// 2. Parse
 	p := parser.New(l)
