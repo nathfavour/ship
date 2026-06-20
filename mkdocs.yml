@@ -30,5 +30,6 @@ nav:
   - Getting Started: getting-started.md
   - Syntax Reference: syntax.md
   - Architecture: architecture.md
+  - Backend Design: backend-architecture.md
   - Agentic Interface: agent-interface.md
   - Memory Model: memory-model.md
