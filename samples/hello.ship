@@ -2,6 +2,6 @@
 // Run it directly: ship samples/hello.ship
 
 fn main() -> int {
-	print("hello world");
+	print("hello world mother nathfavour'");
 	return 0;
 }
