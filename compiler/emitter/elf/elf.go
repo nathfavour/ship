@@ -48,14 +48,16 @@ type Elf64Phdr struct {
 }
 
 type Emitter struct {
-	program *ir.Program
-	buf     *bytes.Buffer
+	program  *ir.Program
+	buf      *bytes.Buffer
+	labelPCs map[string]int
 }
 
 func New(prog *ir.Program) *Emitter {
 	return &Emitter{
-		program: prog,
-		buf:     new(bytes.Buffer),
+		program:  prog,
+		buf:      new(bytes.Buffer),
+		labelPCs: make(map[string]int),
 	}
 }
 
@@ -70,7 +72,8 @@ func (e *Emitter) Emit() ([]byte, error) {
 	ehdr.Machine = 62 // EM_X86_64
 	ehdr.Version = 1
 
-	entryPoint := uint64(0x400000) + 64 + 56 // Base + Ehdr + Phdr
+	mainOffset := e.labelPCs["main"]
+	entryPoint := uint64(0x400000) + 64 + 56 + uint64(mainOffset)
 	ehdr.Entry = entryPoint
 	ehdr.Phoff = 64
 	ehdr.Shoff = 0
@@ -128,7 +131,7 @@ func append32(code []byte, val int32) []byte {
 
 func (e *Emitter) generateTextSegment() []byte {
 	var code []byte
-	labelPCs := make(map[string]int)
+	labelPCs := e.labelPCs
 	refs := []labelRef{}
 
 	var currentFunc string

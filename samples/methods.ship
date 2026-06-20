@@ -1,0 +1,14 @@
+// methods.ship: Demonstrates structure method receivers in Ship.
+// Run it directly: ship samples/methods.ship
+
+type Math struct {
+	dummy int
+}
+
+fn (m Math) add() -> int {
+	return 42;
+}
+
+fn main() -> int {
+	return 0;
+}
