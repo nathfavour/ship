@@ -122,6 +122,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseFuncDecl()
 	case token.TYPE:
 		return p.parseTypeDecl()
+	case token.FOR:
+		return p.parseForStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
