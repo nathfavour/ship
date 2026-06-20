@@ -1,0 +1,36 @@
+// webserver.ship: A simple HTTP web server written in Ship using low-level socket API.
+// Run it directly: ship samples/webserver.ship
+
+fn main() -> int {
+	let port = 8082;
+	print("Starting web server on port 8082...\n");
+	
+	let listener = net_listen(port);
+	if (listener == -1) {
+		print("Failed to start listener\n");
+		return 1;
+	}
+	
+	print("Listening for incoming connection...\n");
+	
+	let client = net_accept(listener);
+	if (client == -1) {
+		print("Failed to accept client connection\n");
+		net_close(listener);
+		return 1;
+	}
+	
+	print("Client connected! Reading request:\n");
+	
+	let request = net_read(client);
+	print(request);
+	
+	let response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\nConnection: close\r\n\r\nHello World!";
+	net_write(client, response);
+	
+	print("\nResponse sent. Closing connection.\n");
+	net_close(client);
+	net_close(listener);
+	
+	return 0;
+}

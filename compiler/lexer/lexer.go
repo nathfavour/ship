@@ -173,14 +173,38 @@ func (l *Lexer) readNumber() string {
 }
 
 func (l *Lexer) readString() string {
-	position := l.position + 1
+	var out []byte
 	for {
 		l.readChar()
 		if l.ch == '"' || l.ch == 0 {
 			break
 		}
+		if l.ch == '\\' {
+			next := l.peekChar()
+			switch next {
+			case 'n':
+				out = append(out, '\n')
+				l.readChar()
+			case 'r':
+				out = append(out, '\r')
+				l.readChar()
+			case 't':
+				out = append(out, '\t')
+				l.readChar()
+			case '\\':
+				out = append(out, '\\')
+				l.readChar()
+			case '"':
+				out = append(out, '"')
+				l.readChar()
+			default:
+				out = append(out, '\\')
+			}
+		} else {
+			out = append(out, l.ch)
+		}
 	}
-	return l.input[position:l.position]
+	return string(out)
 }
 
 func (l *Lexer) skipWhitespace() {
