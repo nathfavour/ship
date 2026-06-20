@@ -2,7 +2,7 @@
 // Run it directly: ship samples/io.ship
 
 fn main() -> int {
-	print("Enter some text: ");
+	print("Enter some text brii: ");
 	let input_text = input();
 	
 	print("Writing text to file samples/io.txt...");
