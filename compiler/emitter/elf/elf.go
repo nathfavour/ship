@@ -283,6 +283,19 @@ func (e *Emitter) generateTextSegment() []byte {
 					isCall:            true,
 				})
 				code = append32(code, 0)
+			} else if fnName == "print_str" || fnName == "println_str" {
+				argOffset := sc.getOffset(inst.Src2)
+				// mov rax, [rbp + argOffset]
+				code = append(code, 0x48, 0x8b, 0x85)
+				code = append32(code, int32(argOffset))
+				// call print_str helper
+				code = append(code, 0xe8)
+				refs = append(refs, labelRef{
+					placeholderOffset: len(code),
+					targetLabel:       "__print_str",
+					isCall:            true,
+				})
+				code = append32(code, 0)
 			} else {
 				// call fn
 				code = append(code, 0xe8)
@@ -379,6 +392,43 @@ func (e *Emitter) generateTextSegment() []byte {
 		0xc3,                   // ret
 	}
 	code = append(code, printHelper...)
+
+	// Append __print_str helper assembly routine to print null-terminated strings
+	labelPCs["__print_str"] = len(code)
+	printStrHelper := []byte{
+		0x57,                   // push rdi
+		0x56,                   // push rsi
+		0x52,                   // push rdx
+		0x51,                   // push rcx
+		0x48, 0x89, 0xc6,       // mov rsi, rax (string address)
+		0x48, 0xc7, 0xc2, 0x00, 0x00, 0x00, 0x00, // mov rdx, 0 (len)
+		// len_loop:
+		0x80, 0x3c, 0x16, 0x00, // cmp byte ptr [rsi + rdx], 0
+		0x74, 0x05,             // je len_done
+		0x48, 0xff, 0xc2,       // inc rdx
+		0xeb, 0xf5,             // jmp len_loop
+		// len_done:
+		0x48, 0x85, 0xd2,       // test rdx, rdx
+		0x74, 0x09,             // jz print_done
+		0xbf, 0x01, 0x00, 0x00, 0x00, // mov edi, 1 (stdout)
+		0xb8, 0x01, 0x00, 0x00, 0x00, // mov eax, 1 (sys_write)
+		0x0f, 0x05,             // syscall
+		// print_done:
+		0x48, 0xc7, 0xc0, 0x0a, 0x00, 0x00, 0x00, // mov rax, 10 ('\n')
+		0x50,                   // push rax
+		0xbf, 0x01, 0x00, 0x00, 0x00, // mov edi, 1
+		0x48, 0x89, 0xe6,       // mov rsi, rsp
+		0xba, 0x01, 0x00, 0x00, 0x00, // mov edx, 1
+		0xb8, 0x01, 0x00, 0x00, 0x00, // mov eax, 1
+		0x0f, 0x05,             // syscall
+		0x58,                   // pop rax
+		0x59,                   // pop rcx
+		0x5a,                   // pop rdx
+		0x5e,                   // pop rsi
+		0x5f,                   // pop rdi
+		0xc3,                   // ret
+	}
+	code = append(code, printStrHelper...)
 
 	// Pass 2: label offsets resolution
 	for _, ref := range refs {

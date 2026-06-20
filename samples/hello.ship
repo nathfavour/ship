@@ -2,5 +2,6 @@
 // Run it directly: ship samples/hello.ship
 
 fn main() -> int {
-	return 419;
+	print("hello world");
+	return 0;
 }
