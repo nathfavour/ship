@@ -83,6 +83,11 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 		imm := Operand{Type: "immediate", Value: fmt.Sprintf("%d", e.Value)}
 		l.emit(OpLoad, reg, imm, Operand{}, "")
 		return reg
+	case *ast.StringLiteral:
+		reg := l.newReg()
+		imm := Operand{Type: "string", Value: e.Value}
+		l.emit(OpLoad, reg, imm, Operand{}, "")
+		return reg
 	case *ast.Identifier:
 		reg := l.newReg()
 		varOp := Operand{Type: "variable", Value: e.Value}
@@ -153,6 +158,13 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 		var argReg Operand
 		if len(e.Arguments) > 0 {
 			argReg = l.lowerExpression(e.Arguments[0])
+			if _, ok := e.Arguments[0].(*ast.StringLiteral); ok {
+				if fnName == "print" {
+					fnName = "print_str"
+				} else if fnName == "println" {
+					fnName = "println_str"
+				}
+			}
 		}
 		dest := l.newReg()
 		l.emit(OpCall, dest, Operand{Type: "label", Value: fnName}, argReg, "")

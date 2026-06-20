@@ -163,6 +163,21 @@ func (e *Emitter) generateTextSegment() []byte {
 				// mov rax, imm32
 				code = append(code, 0x48, 0xc7, 0xc0)
 				code = append32(code, int32(val))
+			} else if inst.Src1.Type == "string" {
+				strVal := inst.Src1.Value
+				// jmp short over string bytes: 0xeb, byte(len + 1)
+				code = append(code, 0xeb, byte(len(strVal)+1))
+				// embed string + null byte
+				code = append(code, []byte(strVal)...)
+				code = append(code, 0x00)
+				// lea rax, [rip + offset] -> 0x48, 0x8d, 0x05, 4-byte offset
+				code = append(code, 0x48, 0x8d, 0x05)
+				// offset from instruction following lea to string start:
+				// rip points to (lea_start + 7)
+				// string starts at (lea_start - (len + 1))
+				// offset = - (len + 1 + 7)
+				offset := -int32(len(strVal) + 1 + 7)
+				code = append32(code, offset)
 			} else {
 				srcOffset := sc.getOffset(inst.Src1)
 				// mov rax, [rbp + srcOffset]
