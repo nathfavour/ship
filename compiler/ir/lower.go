@@ -112,6 +112,19 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 			l.emit(OpGt, dest, left, right, "")
 		}
 		return dest
+	case *ast.PrefixExpression:
+		right := l.lowerExpression(e.Right)
+		dest := l.newReg()
+		if e.Operator == "-" {
+			zeroReg := l.newReg()
+			l.emit(OpLoad, zeroReg, Operand{Type: "immediate", Value: "0"}, Operand{}, "")
+			l.emit(OpSub, dest, zeroReg, right, "")
+		} else if e.Operator == "!" {
+			oneReg := l.newReg()
+			l.emit(OpLoad, oneReg, Operand{Type: "immediate", Value: "1"}, Operand{}, "")
+			l.emit(OpSub, dest, oneReg, right, "")
+		}
+		return dest
 	case *ast.IfExpression:
 		// simple lower
 		condReg := l.lowerExpression(e.Condition)
