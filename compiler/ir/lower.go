@@ -104,6 +104,31 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 		l.emit(OpLoad, reg, varOp, Operand{}, "")
 		return reg
 	case *ast.InfixExpression:
+		if e.Operator == "=" {
+			right := l.lowerExpression(e.Right)
+			if ident, ok := e.Left.(*ast.Identifier); ok {
+				dest := Operand{Type: "variable", Value: ident.Value}
+				l.emit(OpStore, dest, right, Operand{}, "")
+				return right
+			}
+			if sel, ok := e.Left.(*ast.SelectorExpression); ok {
+				if ident, ok := sel.Left.(*ast.Identifier); ok {
+					typeName := l.varTypes[ident.Value]
+					typeName = strings.TrimPrefix(typeName, "*")
+					if st, ok := l.structs[typeName]; ok {
+						for _, field := range st.Fields() {
+							if field.Name == sel.Right.Value {
+								derefOp := Operand{Type: "deref", Value: fmt.Sprintf("%s,%d", ident.Value, field.Offset)}
+								l.emit(OpStore, derefOp, right, Operand{}, "")
+								return right
+							}
+						}
+					}
+				}
+			}
+			return Operand{}
+		}
+
 		left := l.lowerExpression(e.Left)
 		right := l.lowerExpression(e.Right)
 		dest := l.newReg()
@@ -163,6 +188,22 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 		
 		l.emitLabel(endLabel)
 		return condReg // normally if statements don't return values, but for now we return condReg
+	case *ast.SelectorExpression:
+		if ident, ok := e.Left.(*ast.Identifier); ok {
+			typeName := l.varTypes[ident.Value]
+			typeName = strings.TrimPrefix(typeName, "*")
+			if st, ok := l.structs[typeName]; ok {
+				for _, field := range st.Fields() {
+					if field.Name == e.Right.Value {
+						derefOp := Operand{Type: "deref", Value: fmt.Sprintf("%s,%d", ident.Value, field.Offset)}
+						reg := l.newReg()
+						l.emit(OpLoad, reg, derefOp, Operand{}, "")
+						return reg
+					}
+				}
+			}
+		}
+		return Operand{}
 	case *ast.CallExpression:
 		fnName := ""
 		var argReg Operand
