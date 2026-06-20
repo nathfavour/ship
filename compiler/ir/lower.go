@@ -186,6 +186,15 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 			return dest
 		}
 
+		if fnName == "net_write" && len(e.Arguments) == 2 {
+			arg1 := l.lowerExpression(e.Arguments[0])
+			arg2 := l.lowerExpression(e.Arguments[1])
+			l.emit(OpStore, Operand{Type: "variable", Value: "__net_write_arg2"}, arg2, Operand{}, "")
+			dest := l.newReg()
+			l.emit(OpCall, dest, Operand{Type: "label", Value: "net_write"}, arg1, "")
+			return dest
+		}
+
 		if !hasReceiver && len(e.Arguments) > 0 {
 			argReg = l.lowerExpression(e.Arguments[0])
 			isString := false
@@ -197,7 +206,7 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 				}
 			} else if call, ok := e.Arguments[0].(*ast.CallExpression); ok {
 				if callIdent, ok := call.Function.(*ast.Identifier); ok {
-					if callIdent.Value == "read_file" || callIdent.Value == "read_str" || callIdent.Value == "input" {
+					if callIdent.Value == "read_file" || callIdent.Value == "read_str" || callIdent.Value == "input" || callIdent.Value == "net_read" {
 						isString = true
 					}
 				}

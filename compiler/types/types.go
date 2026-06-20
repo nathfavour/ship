@@ -300,7 +300,7 @@ func (c *Checker) checkExpression(exp ast.Expression) Type {
 			c.checkExpression(arg)
 		}
 		if ident, ok := e.Function.(*ast.Identifier); ok {
-			if ident.Value == "read_file" || ident.Value == "read_str" || ident.Value == "input" {
+			if ident.Value == "read_file" || ident.Value == "read_str" || ident.Value == "input" || ident.Value == "net_read" {
 				return StringType
 			}
 		}
