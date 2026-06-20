@@ -189,6 +189,16 @@ func (c *Checker) checkFuncDecl(s *ast.FuncDecl) {
 	c.currentEnv = funcEnv
 	defer func() { c.currentEnv = funcEnv.outer; c.currentFunc = "" }()
 
+	if s.Receiver != nil {
+		receiverType := c.resolveTypeName(s.Receiver.Type)
+		if receiverType == nil {
+			c.reportError("UNKNOWN_RECEIVER_TYPE", s.Receiver.Type, map[string]interface{}{"type": s.Receiver.Type.Literal})
+		} else {
+			c.currentEnv.Set(s.Receiver.Name.Literal, receiverType)
+			c.VarTypes[s.Receiver.Name.Literal] = receiverType.Name()
+		}
+	}
+
 	for _, param := range s.Params {
 		paramType := c.resolveTypeName(param.Type)
 		if paramType == nil {

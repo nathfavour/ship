@@ -163,6 +163,34 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 func (p *Parser) parseFuncDecl() *ast.FuncDecl {
 	decl := &ast.FuncDecl{Token: p.curToken}
 
+	if p.peekTokenIs(token.LPAREN) {
+		p.nextToken() // move to '('
+		p.nextToken() // move to receiver name
+		receiverName := p.curToken
+		var receiverType token.Token
+		isPointer := false
+		
+		if p.peekTokenIs(token.ASTERISK) {
+			p.nextToken() // move to '*'
+			isPointer = true
+		}
+		
+		if !p.expectPeek(token.IDENT) {
+			return nil
+		}
+		receiverType = p.curToken
+		
+		if !p.expectPeek(token.RPAREN) {
+			return nil
+		}
+		
+		decl.Receiver = &ast.StructField{
+			Name: receiverName,
+			Type: receiverType,
+		}
+		decl.ReceiverIsPointer = isPointer
+	}
+
 	if !p.expectPeek(token.IDENT) {
 		return nil
 	}

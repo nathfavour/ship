@@ -42,12 +42,14 @@ type ContractBlock struct {
 }
 
 type FuncDecl struct {
-	Token      token.Token // token.FN
-	Name       token.Token
-	Params     []StructField
-	ReturnType token.Token
-	Contract   *ContractBlock
-	Body       *BlockStatement
+	Token             token.Token // token.FN
+	Receiver          *StructField // nil if normal function
+	ReceiverIsPointer bool
+	Name              token.Token
+	Params            []StructField
+	ReturnType        token.Token
+	Contract          *ContractBlock
+	Body              *BlockStatement
 }
 
 func (fd *FuncDecl) statementNode() {}
