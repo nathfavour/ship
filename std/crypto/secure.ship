@@ -5,7 +5,6 @@ type SecureHasher struct {
 }
 
 fn (sh *SecureHasher) init(alg int) -> int {
-	sh.algorithm = alg;
 	return 0;
 }
 

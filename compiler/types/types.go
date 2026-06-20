@@ -279,13 +279,23 @@ func (c *Checker) checkExpression(exp ast.Expression) Type {
 			return nil
 		}
 		return t
+	case *ast.PrefixExpression:
+		return c.checkExpression(e.Right)
 	case *ast.InfixExpression:
 		left := c.checkExpression(e.Left)
 		right := c.checkExpression(e.Right)
 		if left != right {
+			leftName := "unknown"
+			if left != nil {
+				leftName = left.Name()
+			}
+			rightName := "unknown"
+			if right != nil {
+				rightName = right.Name()
+			}
 			c.reportError("TYPE_MISMATCH", e.Token, map[string]interface{}{
-				"left":  left.Name(),
-				"right": right.Name(),
+				"left":  leftName,
+				"right": rightName,
 			})
 			return nil
 		}
