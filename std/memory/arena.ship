@@ -1,0 +1,33 @@
+// std/memory/arena.ship: Arena Allocator implementation in Ship.
+// Rapid bump-pointer allocation intended to be freed all at once.
+
+type Arena struct {
+	start int
+	offset int
+	size int
+}
+
+fn (a *Arena) init(start int, size int) -> int {
+	contract {
+		require: size > 0
+	}
+	a.start = start;
+	a.offset = 0;
+	a.size = size;
+	return 0;
+}
+
+fn (a *Arena) alloc(size int) -> int {
+	contract {
+		require: size > 0
+		require: (a.offset + size) < a.size
+	}
+	let addr = a.start + a.offset;
+	a.offset = a.offset + size;
+	return addr;
+}
+
+fn (a *Arena) free_all() -> int {
+	a.offset = 0;
+	return 0;
+}

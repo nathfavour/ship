@@ -1,0 +1,35 @@
+// std/core/slice.ship: Contiguous bounds-checked slice wrapper in Ship.
+
+type Slice struct {
+	ptr int
+	length int
+	capacity int
+}
+
+fn (s *Slice) init(ptr int, cap int) -> int {
+	contract {
+		require: cap >= 0
+	}
+	s.ptr = ptr;
+	s.length = 0;
+	s.capacity = cap;
+	return 0;
+}
+
+fn (s *Slice) get(index int) -> int {
+	contract {
+		require: index >= 0
+		require: index < s.length
+	}
+	// Emulated memory lookup: base + index * word_size (8 bytes)
+	let offset = index * 8;
+	return s.ptr + offset;
+}
+
+fn (s *Slice) push(val int) -> int {
+	contract {
+		require: s.length < s.capacity
+	}
+	s.length = s.length + 1;
+	return s.length;
+}
