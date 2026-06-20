@@ -10,11 +10,13 @@ type Lowerer struct {
 	program      *Program
 	regCounter   int
 	labelCounter int
+	varTypes     map[string]string
 }
 
-func NewLowerer() *Lowerer {
+func NewLowerer(varTypes map[string]string) *Lowerer {
 	return &Lowerer{
-		program: &Program{Instructions: []Instruction{}},
+		program:  &Program{Instructions: []Instruction{}},
+		varTypes: varTypes,
 	}
 }
 
@@ -155,10 +157,34 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 		return condReg // normally if statements don't return values, but for now we return condReg
 	case *ast.CallExpression:
 		fnName := e.Function.(*ast.Identifier).Value
+		if fnName == "write_file" && len(e.Arguments) == 2 {
+			arg1 := l.lowerExpression(e.Arguments[0])
+			arg2 := l.lowerExpression(e.Arguments[1])
+			l.emit(OpStore, Operand{Type: "variable", Value: "__write_file_arg2"}, arg2, Operand{}, "")
+			dest := l.newReg()
+			l.emit(OpCall, dest, Operand{Type: "label", Value: "write_file"}, arg1, "")
+			return dest
+		}
+
 		var argReg Operand
 		if len(e.Arguments) > 0 {
 			argReg = l.lowerExpression(e.Arguments[0])
+			isString := false
 			if _, ok := e.Arguments[0].(*ast.StringLiteral); ok {
+				isString = true
+			} else if ident, ok := e.Arguments[0].(*ast.Identifier); ok {
+				if l.varTypes[ident.Value] == "string" {
+					isString = true
+				}
+			} else if call, ok := e.Arguments[0].(*ast.CallExpression); ok {
+				if callIdent, ok := call.Function.(*ast.Identifier); ok {
+					if callIdent.Value == "read_file" || callIdent.Value == "read_str" || callIdent.Value == "input" {
+						isString = true
+					}
+				}
+			}
+
+			if isString {
 				if fnName == "print" {
 					fnName = "print_str"
 				} else if fnName == "println" {

@@ -296,6 +296,54 @@ func (e *Emitter) generateTextSegment() []byte {
 					isCall:            true,
 				})
 				code = append32(code, 0)
+			} else if fnName == "write_file" {
+				arg1Offset := sc.getOffset(inst.Src2)
+				code = append(code, 0x48, 0x8b, 0xbd)
+				code = append32(code, int32(arg1Offset))
+
+				arg2Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__write_file_arg2"})
+				code = append(code, 0x48, 0x8b, 0xb5)
+				code = append32(code, int32(arg2Offset))
+
+				code = append(code, 0xe8)
+				refs = append(refs, labelRef{
+					placeholderOffset: len(code),
+					targetLabel:       "write_file",
+					isCall:            true,
+				})
+				code = append32(code, 0)
+
+				destOffset := sc.getOffset(inst.Dest)
+				code = append(code, 0x48, 0x89, 0x85)
+				code = append32(code, int32(destOffset))
+			} else if fnName == "read_file" {
+				argOffset := sc.getOffset(inst.Src2)
+				code = append(code, 0x48, 0x8b, 0xbd)
+				code = append32(code, int32(argOffset))
+
+				code = append(code, 0xe8)
+				refs = append(refs, labelRef{
+					placeholderOffset: len(code),
+					targetLabel:       "read_file",
+					isCall:            true,
+				})
+				code = append32(code, 0)
+
+				destOffset := sc.getOffset(inst.Dest)
+				code = append(code, 0x48, 0x89, 0x85)
+				code = append32(code, int32(destOffset))
+			} else if fnName == "read_str" || fnName == "input" {
+				code = append(code, 0xe8)
+				refs = append(refs, labelRef{
+					placeholderOffset: len(code),
+					targetLabel:       "read_str",
+					isCall:            true,
+				})
+				code = append32(code, 0)
+
+				destOffset := sc.getOffset(inst.Dest)
+				code = append(code, 0x48, 0x89, 0x85)
+				code = append32(code, int32(destOffset))
 			} else {
 				// call fn
 				code = append(code, 0xe8)
@@ -429,6 +477,131 @@ func (e *Emitter) generateTextSegment() []byte {
 		0xc3,                   // ret
 	}
 	code = append(code, printStrHelper...)
+
+	// Append write_file helper
+	labelPCs["write_file"] = len(code)
+	writeHelper := []byte{
+		0x56,                                     // push rsi
+		0x48, 0xc7, 0xc6, 0xa4, 0x01, 0x00, 0x00, // mov rsi, 0x1a4
+		0x48, 0xc7, 0xc0, 0x55, 0x00, 0x00, 0x00, // mov rax, 85
+		0x0f, 0x05,                               // syscall
+		0x5e,                                     // pop rsi
+		0x48, 0x85, 0xc0,                         // test rax, rax
+		0x78, 0x2b,                               // js write_error (+43)
+		0x50,                                     // push rax
+		0x48, 0x31, 0xc9,                         // xor rcx, rcx
+		// len_loop:
+		0x80, 0x3c, 0x0e, 0x00,                   // cmp byte ptr [rsi + rcx], 0
+		0x74, 0x05,                               // je len_done
+		0x48, 0xff, 0xc1,                         // inc rcx
+		0xeb, 0xf5,                               // jmp len_loop
+		// len_done:
+		0x48, 0x89, 0xca,                         // mov rdx, rcx
+		0x5f,                                     // pop rdi
+		0x57,                                     // push rdi
+		0x48, 0xc7, 0xc0, 0x01, 0x00, 0x00, 0x00, // mov rax, 1
+		0x0f, 0x05,                               // syscall
+		0x5f,                                     // pop rdi
+		0x48, 0xc7, 0xc0, 0x03, 0x00, 0x00, 0x00, // mov rax, 3
+		0x0f, 0x05,                               // syscall
+		0x48, 0x31, 0xc0,                         // xor rax, rax
+		0xc3,                                     // ret
+		// write_error:
+		0x48, 0xc7, 0xc0, 0xff, 0xff, 0xff, 0xff, // mov rax, -1
+		0xc3,                                     // ret
+	}
+	code = append(code, writeHelper...)
+
+	// Append read_file helper
+	labelPCs["read_file"] = len(code)
+	readFileStart := len(code)
+	readFileHelper := []byte{
+		0x48, 0xc7, 0xc6, 0x00, 0x00, 0x00, 0x00, // mov rsi, 0
+		0x48, 0xc7, 0xc2, 0x00, 0x00, 0x00, 0x00, // mov rdx, 0
+		0x48, 0xc7, 0xc0, 0x02, 0x00, 0x00, 0x00, // mov rax, 2
+		0x0f, 0x05,                               // syscall
+		0x48, 0x85, 0xc0,                         // test rax, rax
+		0x78, 0x3d,                               // js read_error (+61)
+		0x50,                                     // push rax
+		0x48, 0x8d, 0x35, 0x00, 0x00, 0x00, 0x00, // lea rsi, [rip + __read_file_buf] (placeholder at 33)
+		0x48, 0xc7, 0xc2, 0x00, 0x00, 0x01, 0x00, // mov rdx, 65536
+		0x48, 0xc7, 0xc0, 0x00, 0x00, 0x00, 0x00, // mov rax, 0
+		0x0f, 0x05,                               // syscall
+		0x48, 0x85, 0xc0,                         // test rax, rax
+		0x79, 0x03,                               // jns read_ok (+3)
+		0x48, 0x31, 0xc0,                         // xor rax, rax
+		// read_ok:
+		0x48, 0x8d, 0x35, 0x00, 0x00, 0x00, 0x00, // lea rsi, [rip + __read_file_buf] (placeholder at 64)
+		0xc6, 0x04, 0x06, 0x00,                   // mov byte ptr [rsi + rax], 0
+		0x5f,                                     // pop rdi
+		0x48, 0xc7, 0xc0, 0x03, 0x00, 0x00, 0x00, // mov rax, 3
+		0x0f, 0x05,                               // syscall
+		0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00, // lea rax, [rip + __read_file_buf] (placeholder at 88)
+		0xc3,                                     // ret
+		// read_error:
+		0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00, // lea rax, [rip + __empty_str] (placeholder at 96)
+		0xc3,                                     // ret
+	}
+	code = append(code, readFileHelper...)
+
+	// Append read_str helper
+	labelPCs["read_str"] = len(code)
+	readStrStart := len(code)
+	readStrHelper := []byte{
+		0x48, 0xc7, 0xc7, 0x00, 0x00, 0x00, 0x00, // mov rdi, 0
+		0x48, 0x8d, 0x35, 0x00, 0x00, 0x00, 0x00, // lea rsi, [rip + __input_buf] (placeholder at 10)
+		0x48, 0xc7, 0xc2, 0x00, 0x10, 0x00, 0x00, // mov rdx, 4096
+		0x48, 0xc7, 0xc0, 0x00, 0x00, 0x00, 0x00, // mov rax, 0
+		0x0f, 0x05,                               // syscall
+		0x48, 0x85, 0xc0,                         // test rax, rax
+		0x7e, 0x30,                               // jle read_str_empty (+48)
+		0x50,                                     // push rax
+		0x48, 0x8d, 0x35, 0x00, 0x00, 0x00, 0x00, // lea rsi, [rip + __input_buf] (placeholder at 39)
+		0x58,                                     // pop rax
+		0xc6, 0x04, 0x06, 0x00,                   // mov byte ptr [rsi + rax], 0
+		0x48, 0xff, 0xc8,                         // dec rax
+		0x80, 0x3c, 0x06, 0x0a,                   // cmp byte ptr [rsi + rax], 10
+		0x75, 0x04,                               // jne no_nl (+4)
+		0xc6, 0x04, 0x06, 0x00,                   // mov byte ptr [rsi + rax], 0
+		// no_nl:
+		0x48, 0x85, 0xc0,                         // test rax, rax
+		0x74, 0x0d,                               // jz no_nl2 (+13)
+		0x48, 0xff, 0xc8,                         // dec rax
+		0x80, 0x3c, 0x06, 0x0d,                   // cmp byte ptr [rsi + rax], 13
+		0x75, 0x04,                               // jne no_nl2 (+4)
+		0xc6, 0x04, 0x06, 0x00,                   // mov byte ptr [rsi + rax], 0
+		// no_nl2:
+		0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00, // lea rax, [rip + __input_buf] (placeholder at 79)
+		0xc3,                                     // ret
+		// read_str_empty:
+		0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00, // lea rax, [rip + __empty_str] (placeholder at 85)
+		0xc3,                                     // ret
+	}
+	code = append(code, readStrHelper...)
+
+	// Append static data buffers
+	emptyStrPC := len(code)
+	code = append(code, 0x00)
+
+	inputBufPC := len(code)
+	inputBufBytes := make([]byte, 4096)
+	code = append(code, inputBufBytes...)
+
+	readFileBufPC := len(code)
+	readFileBufBytes := make([]byte, 65536)
+	code = append(code, readFileBufBytes...)
+
+	// Relocate readFileHelper placeholders
+	binary.LittleEndian.PutUint32(code[readFileStart+33:readFileStart+37], uint32(readFileBufPC-(readFileStart+37)))
+	binary.LittleEndian.PutUint32(code[readFileStart+64:readFileStart+68], uint32(readFileBufPC-(readFileStart+68)))
+	binary.LittleEndian.PutUint32(code[readFileStart+88:readFileStart+92], uint32(readFileBufPC-(readFileStart+92)))
+	binary.LittleEndian.PutUint32(code[readFileStart+96:readFileStart+100], uint32(emptyStrPC-(readFileStart+100)))
+
+	// Relocate readStrHelper placeholders
+	binary.LittleEndian.PutUint32(code[readStrStart+10:readStrStart+14], uint32(inputBufPC-(readStrStart+14)))
+	binary.LittleEndian.PutUint32(code[readStrStart+39:readStrStart+43], uint32(inputBufPC-(readStrStart+43)))
+	binary.LittleEndian.PutUint32(code[readStrStart+79:readStrStart+83], uint32(inputBufPC-(readStrStart+83)))
+	binary.LittleEndian.PutUint32(code[readStrStart+85:readStrStart+89], uint32(emptyStrPC-(readStrStart+89)))
 
 	// Pass 2: label offsets resolution
 	for _, ref := range refs {

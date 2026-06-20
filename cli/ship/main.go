@@ -220,7 +220,7 @@ func compile(inputFile, outputFile string, agent bool, isRunCommand bool) {
 	}
 
 	// 4. Lower to IR
-	lowerer := ir.NewLowerer()
+	lowerer := ir.NewLowerer(checker.VarTypes)
 	program := lowerer.LowerFile(astFile)
 
 	// 5. Emit ELF

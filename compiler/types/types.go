@@ -86,6 +86,7 @@ type Checker struct {
 	errors       []*CheckerError
 	currentFile  string
 	currentFunc  string
+	VarTypes     map[string]string // Expose var types
 }
 
 func NewChecker() *Checker {
@@ -98,6 +99,7 @@ func NewChecker() *Checker {
 		currentEnv: env,
 		structs:    make(map[string]*StructType),
 		errors:     []*CheckerError{},
+		VarTypes:   make(map[string]string),
 	}
 }
 
@@ -194,6 +196,7 @@ func (c *Checker) checkFuncDecl(s *ast.FuncDecl) {
 			continue
 		}
 		c.currentEnv.Set(param.Name.Literal, paramType)
+		c.VarTypes[param.Name.Literal] = paramType.Name()
 	}
 
 	if s.Contract != nil {
@@ -232,6 +235,7 @@ func (c *Checker) checkLetStatement(s *ast.LetStatement) {
 	valType := c.checkExpression(s.Value)
 	if valType != nil {
 		c.currentEnv.Set(s.Name.Value, valType)
+		c.VarTypes[s.Name.Value] = valType.Name()
 	}
 }
 
@@ -284,6 +288,11 @@ func (c *Checker) checkExpression(exp ast.Expression) Type {
 		// very naive right now, ideally we should lookup function signature
 		for _, arg := range e.Arguments {
 			c.checkExpression(arg)
+		}
+		if ident, ok := e.Function.(*ast.Identifier); ok {
+			if ident.Value == "read_file" || ident.Value == "read_str" || ident.Value == "input" {
+				return StringType
+			}
 		}
 		return IntType // default placeholder
 	}

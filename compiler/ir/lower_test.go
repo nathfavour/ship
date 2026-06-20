@@ -22,7 +22,7 @@ let c = a + b;
 	p := parser.New(l)
 	file := p.ParseFile()
 
-	lowerer := NewLowerer()
+	lowerer := NewLowerer(make(map[string]string))
 	program := lowerer.LowerFile(file)
 
 	out := program.String()
