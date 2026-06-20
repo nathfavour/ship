@@ -103,8 +103,22 @@ func runCmd() {
 	runFile(inputFile, *agentFlag)
 }
 
+func getBuildDir() string {
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		return os.TempDir()
+	}
+	shipBuildDir := filepath.Join(configDir, "ship", "build")
+	err = os.MkdirAll(shipBuildDir, 0755)
+	if err != nil {
+		return os.TempDir()
+	}
+	return shipBuildDir
+}
+
 func runFile(inputFile string, agent bool) {
-	outputFile := filepath.Join(os.TempDir(), "ship_run_"+filepath.Base(inputFile)+".out")
+	buildDir := getBuildDir()
+	outputFile := filepath.Join(buildDir, "ship_run_"+filepath.Base(inputFile)+".out")
 
 	// Compile silently unless agent flag is used (but run has its own output)
 	compile(inputFile, outputFile, agent, true)
