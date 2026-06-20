@@ -52,6 +52,7 @@ const (
 	NEW      Type = "new" // Included for completeness, though ARCHITECTURE says "new does not exist" as implicit.
 	TRUE     Type = "true"
 	FALSE    Type = "false"
+	FOR      Type = "for"
 )
 
 type Token struct {
@@ -77,6 +78,7 @@ var keywords = map[string]Type{
 	"new":      NEW,
 	"true":     TRUE,
 	"false":    FALSE,
+	"for":      FOR,
 }
 
 func LookupIdent(ident string) Type {

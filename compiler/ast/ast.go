@@ -166,3 +166,12 @@ type SelectorExpression struct {
 
 func (se *SelectorExpression) expressionNode() {}
 func (se *SelectorExpression) Pos() token.Token { return se.Token }
+
+type ForStatement struct {
+	Token     token.Token // token.FOR
+	Condition Expression
+	Body      *BlockStatement
+}
+
+func (fs *ForStatement) statementNode()       {}
+func (fs *ForStatement) Pos() token.Token { return fs.Token }
