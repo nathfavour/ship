@@ -347,7 +347,33 @@ func (e *Emitter) generateTextSegment() []byte {
 				destOffset := sc.getOffset(inst.Dest)
 				code = append(code, 0x48, 0x89, 0x85)
 				code = append32(code, int32(destOffset))
+			} else if fnName == "net_write" {
+				arg1Offset := sc.getOffset(inst.Src2)
+				code = append(code, 0x48, 0x8b, 0xbd)
+				code = append32(code, int32(arg1Offset))
+
+				arg2Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__net_write_arg2"})
+				code = append(code, 0x48, 0x8b, 0xb5)
+				code = append32(code, int32(arg2Offset))
+
+				code = append(code, 0xe8)
+				refs = append(refs, labelRef{
+					placeholderOffset: len(code),
+					targetLabel:       "net_write",
+					isCall:            true,
+				})
+				code = append32(code, 0)
+
+				destOffset := sc.getOffset(inst.Dest)
+				code = append(code, 0x48, 0x89, 0x85)
+				code = append32(code, int32(destOffset))
 			} else {
+				// Load argument into RAX if present
+				if inst.Src2.Type != "" {
+					argOffset := sc.getOffset(inst.Src2)
+					code = append(code, 0x48, 0x8b, 0x85)
+					code = append32(code, int32(argOffset))
+				}
 				// call fn
 				code = append(code, 0xe8)
 				refs = append(refs, labelRef{
