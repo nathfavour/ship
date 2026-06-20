@@ -9,10 +9,9 @@ fn (sh *SecureHasher) init(alg int) -> int {
 	return 0;
 }
 
-fn (sh *SecureHasher) hash(data string) -> int {
-	contract {
-		require: sh.algorithm > 0
-	}
+fn (sh *SecureHasher) hash(data string) -> int contract {
+	require: sh.algorithm > 0
+} {
 	// Return a stub hash signature integer
 	return 42;
 }

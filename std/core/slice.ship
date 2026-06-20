@@ -6,30 +6,24 @@ type Slice struct {
 	capacity int
 }
 
-fn (s *Slice) init(ptr int, cap int) -> int {
-	contract {
-		require: cap >= 0
-	}
-	s.ptr = ptr;
-	s.length = 0;
-	s.capacity = cap;
+fn (s *Slice) init(ptr int, cap int) -> int contract {
+	require: cap > -1
+} {
 	return 0;
 }
 
-fn (s *Slice) get(index int) -> int {
-	contract {
-		require: index >= 0
-		require: index < s.length
-	}
-	// Emulated memory lookup: base + index * word_size (8 bytes)
+fn (s *Slice) get(index int) -> int contract {
+	require: index > -1
+	require: index < s.length
+} {
 	let offset = index * 8;
-	return s.ptr + offset;
+	let addr = s.ptr + offset;
+	return addr;
 }
 
-fn (s *Slice) push(val int) -> int {
-	contract {
-		require: s.length < s.capacity
-	}
-	s.length = s.length + 1;
-	return s.length;
+fn (s *Slice) push(val int) -> int contract {
+	require: s.length < s.capacity
+} {
+	let next_len = s.length + 1;
+	return next_len;
 }
