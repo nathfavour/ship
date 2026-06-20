@@ -1,0 +1,16 @@
+// fibonacci.ship: Calculate Fibonacci numbers recursively.
+// Run it directly: ship samples/fibonacci.ship
+
+fn fib(n int) -> int {
+	if (n < 2) {
+		return n;
+	} else {
+		return fib(n - 1) + fib(n - 2);
+	}
+}
+
+fn main() -> int {
+	// Calculates fib(7) = 13
+	let res = fib(7);
+	return res;
+}

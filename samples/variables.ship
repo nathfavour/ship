@@ -1,0 +1,11 @@
+// variables.ship: Demonstrates variables declaration and type bindings.
+// Run it directly: ship samples/variables.ship
+
+fn main() -> int {
+	let a = 100;
+	let b = "hello";
+	let c = true;
+	
+	let d = a;
+	return d;
+}

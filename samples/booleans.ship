@@ -1,0 +1,17 @@
+// booleans.ship: Demonstrates boolean type and expression checks.
+// Run it directly: ship samples/booleans.ship
+
+fn is_equal(x int, y int) -> int {
+	let eq = x == y;
+	if (eq) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+fn main() -> int {
+	let a = is_equal(5, 5); // 1
+	let b = is_equal(5, 6); // 0
+	return a + b;           // 1
+}

@@ -1,0 +1,16 @@
+// functions.ship: Demonstrates function definitions and parameters in Ship.
+// Run it directly: ship samples/functions.ship
+
+fn double(x int) -> int {
+	return x * 2;
+}
+
+fn add(x int, y int) -> int {
+	return x + y;
+}
+
+fn main() -> int {
+	let a = double(10); // 20
+	let b = add(a, 5);  // 25
+	return b;
+}

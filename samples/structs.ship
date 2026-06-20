@@ -1,0 +1,16 @@
+// structs.ship: Demonstrates struct declarations in Ship.
+// Run it directly: ship samples/structs.ship
+
+type Coordinates struct {
+	x int
+	y int
+}
+
+type User struct {
+	id int
+	name string
+}
+
+fn main() -> int {
+	return 0;
+}

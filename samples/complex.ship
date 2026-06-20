@@ -1,0 +1,28 @@
+// complex.ship: A comprehensive example showcasing multiple language features.
+// Run it directly: ship samples/complex.ship
+
+type Product struct {
+	id int
+	price int
+}
+
+fn calculate_discount(price int, rate int) -> int contract {
+	require: price > 0
+	require: rate > 0
+	ensure: rate < 100
+} {
+	let discount = price * rate / 100;
+	return price - discount;
+}
+
+fn main() -> int {
+	let original_price = 1000;
+	let rate = 15;
+	let final_price = calculate_discount(original_price, rate); // 850
+	
+	if (final_price < 900) {
+		return 0; // Success
+	} else {
+		return 1; // Error code
+	}
+}

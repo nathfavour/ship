@@ -1,0 +1,21 @@
+// comparison.ship: Demonstrates relational comparison operators.
+// Run it directly: ship samples/comparison.ship
+
+fn evaluate(a int, b int) -> int {
+	if (a != b) {
+		if (a > b) {
+			return 1;
+		} else {
+			return 2;
+		}
+	} else {
+		return 0;
+	}
+}
+
+fn main() -> int {
+	let r1 = evaluate(10, 5); // 1
+	let r2 = evaluate(5, 10); // 2
+	let r3 = evaluate(5, 5);  // 0
+	return r1 + r2 + r3;      // 3
+}

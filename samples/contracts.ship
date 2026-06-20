@@ -1,0 +1,14 @@
+// contracts.ship: Demonstrates compile-time contract blocks.
+// Run it directly: ship samples/contracts.ship
+
+fn divide(num int, den int) -> int contract {
+	require: den > 0
+	ensure: num != den
+} {
+	return num / den;
+}
+
+fn main() -> int {
+	let res = divide(10, 2);
+	return res;
+}

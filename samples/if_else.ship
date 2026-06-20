@@ -1,0 +1,16 @@
+// if_else.ship: Demonstrates conditional logic.
+// Run it directly: ship samples/if_else.ship
+
+fn max(x int, y int) -> int {
+	if (x > y) {
+		return x;
+	} else {
+		return y;
+	}
+}
+
+fn main() -> int {
+	let a = max(10, 20); // 20
+	let b = max(50, 5);  // 50
+	return a + b;        // 70
+}

@@ -1,0 +1,14 @@
+// math.ship: Demonstrates arithmetic operations in Ship.
+// Run it directly: ship samples/math.ship
+
+fn main() -> int {
+	let a = 10;
+	let b = 5;
+	let sum = a + b;
+	let diff = a - b;
+	let prod = a * b;
+	let quot = a / b;
+	
+	// Returns 10 + 5 + 50 = 65
+	return sum + diff + prod;
+}

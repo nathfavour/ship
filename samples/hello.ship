@@ -1,0 +1,6 @@
+// hello.ship: The simplest Ship program.
+// Run it directly: ship samples/hello.ship
+
+fn main() -> int {
+	return 0;
+}
