@@ -312,7 +312,7 @@ func (e *Emitter) generateTextSegment() []byte {
 		0x51,                   // push rcx
 		0x41, 0x50,             // push r8
 		0x48, 0x85, 0xc0,       // test rax, rax
-		0x79, 0x22,             // jns pos
+		0x79, 0x23,             // jns pos
 		0x48, 0xf7, 0xd8,       // neg rax
 		0x50,                   // push rax (absolute value)
 		0x48, 0xc7, 0xc0, 0x2d, 0x00, 0x00, 0x00, // mov rax, '-'
