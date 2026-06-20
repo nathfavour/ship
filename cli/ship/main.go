@@ -51,6 +51,11 @@ func main() {
 	case "help":
 		printUsage()
 	default:
+		// If the command argument is a file that exists or has a .ship extension, run it directly
+		if _, err := os.Stat(command); err == nil || filepath.Ext(command) == ".ship" {
+			runFile(command, false)
+			return
+		}
 		fmt.Fprintf(os.Stderr, "ship: unknown command %q\n", command)
 		printUsage()
 		os.Exit(1)
@@ -95,10 +100,14 @@ func runCmd() {
 	}
 
 	inputFile := runFlags.Arg(0)
+	runFile(inputFile, *agentFlag)
+}
+
+func runFile(inputFile string, agent bool) {
 	outputFile := filepath.Join(os.TempDir(), "ship_run_"+filepath.Base(inputFile)+".out")
 
 	// Compile silently unless agent flag is used (but run has its own output)
-	compile(inputFile, outputFile, *agentFlag, true)
+	compile(inputFile, outputFile, agent, true)
 
 	// Execute the compiled binary
 	cmd := exec.Command(outputFile)
