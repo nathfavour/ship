@@ -157,3 +157,12 @@ type CallExpression struct {
 
 func (ce *CallExpression) expressionNode() {}
 func (ce *CallExpression) Pos() token.Token { return ce.Token }
+
+type SelectorExpression struct {
+	Token token.Token // token.DOT
+	Left  Expression
+	Right *Identifier
+}
+
+func (se *SelectorExpression) expressionNode() {}
+func (se *SelectorExpression) Pos() token.Token { return se.Token }

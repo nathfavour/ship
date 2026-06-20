@@ -2,6 +2,7 @@ package ir
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/nathfavour/ship/compiler/ast"
 )
@@ -68,7 +69,11 @@ func (l *Lowerer) lowerStatement(stmt ast.Statement) {
 	case *ast.ExpressionStatement:
 		l.lowerExpression(s.Expression)
 	case *ast.FuncDecl:
-		l.emitLabel(s.Name.Literal)
+		fnLabel := s.Name.Literal
+		if s.Receiver != nil {
+			fnLabel = s.Receiver.Type.Literal + "_" + s.Name.Literal
+		}
+		l.emitLabel(fnLabel)
 		// Parameters would go here
 		if s.Body != nil {
 			for _, bs := range s.Body.Statements {
@@ -156,7 +161,22 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 		l.emitLabel(endLabel)
 		return condReg // normally if statements don't return values, but for now we return condReg
 	case *ast.CallExpression:
-		fnName := e.Function.(*ast.Identifier).Value
+		fnName := ""
+		var argReg Operand
+		hasReceiver := false
+
+		if ident, ok := e.Function.(*ast.Identifier); ok {
+			fnName = ident.Value
+		} else if sel, ok := e.Function.(*ast.SelectorExpression); ok {
+			if ident, ok := sel.Left.(*ast.Identifier); ok {
+				typeName := l.varTypes[ident.Value]
+				typeName = strings.TrimPrefix(typeName, "*")
+				fnName = typeName + "_" + sel.Right.Value
+				argReg = l.lowerExpression(sel.Left)
+				hasReceiver = true
+			}
+		}
+
 		if fnName == "write_file" && len(e.Arguments) == 2 {
 			arg1 := l.lowerExpression(e.Arguments[0])
 			arg2 := l.lowerExpression(e.Arguments[1])
@@ -166,8 +186,7 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 			return dest
 		}
 
-		var argReg Operand
-		if len(e.Arguments) > 0 {
+		if !hasReceiver && len(e.Arguments) > 0 {
 			argReg = l.lowerExpression(e.Arguments[0])
 			isString := false
 			if _, ok := e.Arguments[0].(*ast.StringLiteral); ok {

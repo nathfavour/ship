@@ -30,6 +30,7 @@ var precedences = map[token.Type]int{
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
 	token.LPAREN:   CALL,
+	token.DOT:      CALL,
 }
 
 type (
@@ -75,6 +76,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
+	p.registerInfix(token.DOT, p.parseSelectorExpression)
 
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
@@ -537,6 +539,21 @@ func (p *Parser) noPrefixParseFnError(t token.Type) {
 	msg := fmt.Sprintf("%s:%d:%d: no prefix parse function for %s found",
 		p.curToken.File, p.curToken.Line, p.curToken.Col, t)
 	p.errors = append(p.errors, msg)
+}
+
+func (p *Parser) parseSelectorExpression(left ast.Expression) ast.Expression {
+	expression := &ast.SelectorExpression{
+		Token: p.curToken,
+		Left:  left,
+	}
+
+	if !p.expectPeek(token.IDENT) {
+		return nil
+	}
+
+	expression.Right = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	return expression
 }
 
 func (p *Parser) peekPrecedence() int {

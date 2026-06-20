@@ -305,6 +305,19 @@ func (c *Checker) checkExpression(exp ast.Expression) Type {
 			}
 		}
 		return IntType // default placeholder
+	case *ast.SelectorExpression:
+		leftType := c.checkExpression(e.Left)
+		if leftType == nil {
+			return nil
+		}
+		if st, ok := leftType.(*StructType); ok {
+			for _, field := range st.fields {
+				if field.Name == e.Right.Value {
+					return field.Type
+				}
+			}
+		}
+		return IntType
 	}
 	return nil
 }
