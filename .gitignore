@@ -15,3 +15,6 @@ test.ship
 
 # MkDocs
 site/
+
+# Test binary directories
+/bin/
