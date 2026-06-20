@@ -136,11 +136,13 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 		l.emitLabel(endLabel)
 		return condReg // normally if statements don't return values, but for now we return condReg
 	case *ast.CallExpression:
-		// evaluate args
-		// ...
 		fnName := e.Function.(*ast.Identifier).Value
+		var argReg Operand
+		if len(e.Arguments) > 0 {
+			argReg = l.lowerExpression(e.Arguments[0])
+		}
 		dest := l.newReg()
-		l.emit(OpCall, dest, Operand{Type: "label", Value: fnName}, Operand{}, "")
+		l.emit(OpCall, dest, Operand{Type: "label", Value: fnName}, argReg, "")
 		return dest
 	}
 	return Operand{}
