@@ -1,0 +1,22 @@
+// io.ship: Interactive file read/write and console input sample.
+// Run it directly: ship samples/io.ship
+
+fn main() -> int {
+	print("Enter some text: ");
+	let input_text = input();
+	
+	print("Writing text to file samples/io.txt...");
+	let status = write_file("samples/io.txt", input_text);
+	
+	if (status == 0) {
+		print("File write succeeded.");
+	} else {
+		print("File write failed.");
+	}
+	
+	print("Reading contents back from file:");
+	let file_content = read_file("samples/io.txt");
+	print(file_content);
+	
+	return 0;
+}

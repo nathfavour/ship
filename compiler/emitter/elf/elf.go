@@ -83,7 +83,7 @@ func (e *Emitter) Emit() ([]byte, error) {
 
 	var phdr Elf64Phdr
 	phdr.Type = PT_LOAD
-	phdr.Flags = PF_R | PF_X
+	phdr.Flags = PF_R | PF_W | PF_X
 	phdr.Offset = 0
 	phdr.Vaddr = 0x400000
 	phdr.Paddr = 0x400000
@@ -521,9 +521,12 @@ func (e *Emitter) generateTextSegment() []byte {
 		0x48, 0xc7, 0xc0, 0x02, 0x00, 0x00, 0x00, // mov rax, 2
 		0x0f, 0x05,                               // syscall
 		0x48, 0x85, 0xc0,                         // test rax, rax
-		0x78, 0x3d,                               // js read_error (+61)
-		0x50,                                     // push rax
-		0x48, 0x8d, 0x35, 0x00, 0x00, 0x00, 0x00, // lea rsi, [rip + __read_file_buf] (placeholder at 33)
+		0x78, 0x3f,                               // js read_error (+63)
+		0x50,                                     // push rax (save fd)
+		0x5f,                                     // pop rdi (fd)
+		0x57,                                     // push rdi (save fd again)
+		// lea rsi, [rip + __read_file_buf]
+		0x48, 0x8d, 0x35, 0x00, 0x00, 0x00, 0x00, // lea rsi, [rip + __read_file_buf] (placeholder at 35)
 		0x48, 0xc7, 0xc2, 0x00, 0x00, 0x01, 0x00, // mov rdx, 65536
 		0x48, 0xc7, 0xc0, 0x00, 0x00, 0x00, 0x00, // mov rax, 0
 		0x0f, 0x05,                               // syscall
@@ -531,15 +534,15 @@ func (e *Emitter) generateTextSegment() []byte {
 		0x79, 0x03,                               // jns read_ok (+3)
 		0x48, 0x31, 0xc0,                         // xor rax, rax
 		// read_ok:
-		0x48, 0x8d, 0x35, 0x00, 0x00, 0x00, 0x00, // lea rsi, [rip + __read_file_buf] (placeholder at 64)
+		0x48, 0x8d, 0x35, 0x00, 0x00, 0x00, 0x00, // lea rsi, [rip + __read_file_buf] (placeholder at 66)
 		0xc6, 0x04, 0x06, 0x00,                   // mov byte ptr [rsi + rax], 0
 		0x5f,                                     // pop rdi
 		0x48, 0xc7, 0xc0, 0x03, 0x00, 0x00, 0x00, // mov rax, 3
 		0x0f, 0x05,                               // syscall
-		0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00, // lea rax, [rip + __read_file_buf] (placeholder at 88)
+		0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00, // lea rax, [rip + __read_file_buf] (placeholder at 90)
 		0xc3,                                     // ret
 		// read_error:
-		0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00, // lea rax, [rip + __empty_str] (placeholder at 96)
+		0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00, // lea rax, [rip + __empty_str] (placeholder at 98)
 		0xc3,                                     // ret
 	}
 	code = append(code, readFileHelper...)
@@ -592,16 +595,16 @@ func (e *Emitter) generateTextSegment() []byte {
 	code = append(code, readFileBufBytes...)
 
 	// Relocate readFileHelper placeholders
-	binary.LittleEndian.PutUint32(code[readFileStart+33:readFileStart+37], uint32(readFileBufPC-(readFileStart+37)))
-	binary.LittleEndian.PutUint32(code[readFileStart+64:readFileStart+68], uint32(readFileBufPC-(readFileStart+68)))
-	binary.LittleEndian.PutUint32(code[readFileStart+88:readFileStart+92], uint32(readFileBufPC-(readFileStart+92)))
-	binary.LittleEndian.PutUint32(code[readFileStart+96:readFileStart+100], uint32(emptyStrPC-(readFileStart+100)))
+	binary.LittleEndian.PutUint32(code[readFileStart+34:readFileStart+38], uint32(readFileBufPC-(readFileStart+38)))
+	binary.LittleEndian.PutUint32(code[readFileStart+65:readFileStart+69], uint32(readFileBufPC-(readFileStart+69)))
+	binary.LittleEndian.PutUint32(code[readFileStart+86:readFileStart+90], uint32(readFileBufPC-(readFileStart+90)))
+	binary.LittleEndian.PutUint32(code[readFileStart+94:readFileStart+98], uint32(emptyStrPC-(readFileStart+98)))
 
 	// Relocate readStrHelper placeholders
 	binary.LittleEndian.PutUint32(code[readStrStart+10:readStrStart+14], uint32(inputBufPC-(readStrStart+14)))
 	binary.LittleEndian.PutUint32(code[readStrStart+39:readStrStart+43], uint32(inputBufPC-(readStrStart+43)))
-	binary.LittleEndian.PutUint32(code[readStrStart+79:readStrStart+83], uint32(inputBufPC-(readStrStart+83)))
-	binary.LittleEndian.PutUint32(code[readStrStart+85:readStrStart+89], uint32(emptyStrPC-(readStrStart+89)))
+	binary.LittleEndian.PutUint32(code[readStrStart+82:readStrStart+86], uint32(inputBufPC-(readStrStart+86)))
+	binary.LittleEndian.PutUint32(code[readStrStart+90:readStrStart+94], uint32(emptyStrPC-(readStrStart+94)))
 
 	// Pass 2: label offsets resolution
 	for _, ref := range refs {
