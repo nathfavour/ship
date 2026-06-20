@@ -71,6 +71,22 @@ func (l *Lowerer) lowerStatement(stmt ast.Statement) {
 		l.emit(OpRet, Operand{}, valReg, Operand{}, "")
 	case *ast.ExpressionStatement:
 		l.lowerExpression(s.Expression)
+	case *ast.ForStatement:
+		startLabel := l.newLabel()
+		endLabel := l.newLabel()
+
+		l.emitLabel(startLabel)
+		condReg := l.lowerExpression(s.Condition)
+		l.emit(OpJumpIfZero, Operand{Type: "label", Value: endLabel}, condReg, Operand{}, "loop condition check")
+
+		if s.Body != nil {
+			for _, bs := range s.Body.Statements {
+				l.lowerStatement(bs)
+			}
+		}
+
+		l.emit(OpJump, Operand{Type: "label", Value: startLabel}, Operand{}, Operand{}, "")
+		l.emitLabel(endLabel)
 	case *ast.FuncDecl:
 		fnLabel := s.Name.Literal
 		if s.Receiver != nil {

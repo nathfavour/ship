@@ -138,6 +138,8 @@ func (c *Checker) checkStatement(stmt ast.Statement) {
 		c.checkReturnStatement(s)
 	case *ast.ExpressionStatement:
 		c.checkExpression(s.Expression)
+	case *ast.ForStatement:
+		c.checkForStatement(s)
 	case *ast.BlockStatement:
 		c.checkBlockStatement(s)
 	}
@@ -252,6 +254,16 @@ func (c *Checker) checkLetStatement(s *ast.LetStatement) {
 func (c *Checker) checkReturnStatement(s *ast.ReturnStatement) {
 	c.checkExpression(s.ReturnValue)
 	// Add proper return type matching when function signatures fully specify return types
+}
+
+func (c *Checker) checkForStatement(s *ast.ForStatement) {
+	condType := c.checkExpression(s.Condition)
+	if condType != BoolType {
+		c.reportError("NON_BOOL_CONDITION", s.Condition.Pos(), map[string]interface{}{})
+	}
+	if s.Body != nil {
+		c.checkBlockStatement(s.Body)
+	}
 }
 
 func (c *Checker) checkBlockStatement(s *ast.BlockStatement) {
