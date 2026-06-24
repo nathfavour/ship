@@ -33,3 +33,4 @@ nav:
   - Backend Design: backend-architecture.md
   - Agentic Interface: agent-interface.md
   - Memory Model: memory-model.md
+  - High-Performance I/O: io_uring.md

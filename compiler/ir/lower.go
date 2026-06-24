@@ -255,6 +255,58 @@ func (l *Lowerer) lowerExpression(exp ast.Expression) Operand {
 			return dest
 		}
 
+		if fnName == "sys_io_uring_setup" && len(e.Arguments) == 2 {
+			arg1 := l.lowerExpression(e.Arguments[0])
+			arg2 := l.lowerExpression(e.Arguments[1])
+			l.emit(OpStore, Operand{Type: "variable", Value: "__uring_setup_arg2"}, arg2, Operand{}, "")
+			dest := l.newReg()
+			l.emit(OpCall, dest, Operand{Type: "label", Value: "sys_io_uring_setup"}, arg1, "")
+			return dest
+		}
+
+		if fnName == "sys_io_uring_enter" && len(e.Arguments) == 4 {
+			arg1 := l.lowerExpression(e.Arguments[0])
+			arg2 := l.lowerExpression(e.Arguments[1])
+			arg3 := l.lowerExpression(e.Arguments[2])
+			arg4 := l.lowerExpression(e.Arguments[3])
+			l.emit(OpStore, Operand{Type: "variable", Value: "__uring_enter_arg2"}, arg2, Operand{}, "")
+			l.emit(OpStore, Operand{Type: "variable", Value: "__uring_enter_arg3"}, arg3, Operand{}, "")
+			l.emit(OpStore, Operand{Type: "variable", Value: "__uring_enter_arg4"}, arg4, Operand{}, "")
+			dest := l.newReg()
+			l.emit(OpCall, dest, Operand{Type: "label", Value: "sys_io_uring_enter"}, arg1, "")
+			return dest
+		}
+
+		if fnName == "sys_io_uring_register" && len(e.Arguments) == 4 {
+			arg1 := l.lowerExpression(e.Arguments[0])
+			arg2 := l.lowerExpression(e.Arguments[1])
+			arg3 := l.lowerExpression(e.Arguments[2])
+			arg4 := l.lowerExpression(e.Arguments[3])
+			l.emit(OpStore, Operand{Type: "variable", Value: "__uring_reg_arg2"}, arg2, Operand{}, "")
+			l.emit(OpStore, Operand{Type: "variable", Value: "__uring_reg_arg3"}, arg3, Operand{}, "")
+			l.emit(OpStore, Operand{Type: "variable", Value: "__uring_reg_arg4"}, arg4, Operand{}, "")
+			dest := l.newReg()
+			l.emit(OpCall, dest, Operand{Type: "label", Value: "sys_io_uring_register"}, arg1, "")
+			return dest
+		}
+
+		if fnName == "sys_mmap" && len(e.Arguments) == 6 {
+			arg1 := l.lowerExpression(e.Arguments[0])
+			arg2 := l.lowerExpression(e.Arguments[1])
+			arg3 := l.lowerExpression(e.Arguments[2])
+			arg4 := l.lowerExpression(e.Arguments[3])
+			arg5 := l.lowerExpression(e.Arguments[4])
+			arg6 := l.lowerExpression(e.Arguments[5])
+			l.emit(OpStore, Operand{Type: "variable", Value: "__mmap_arg2"}, arg2, Operand{}, "")
+			l.emit(OpStore, Operand{Type: "variable", Value: "__mmap_arg3"}, arg3, Operand{}, "")
+			l.emit(OpStore, Operand{Type: "variable", Value: "__mmap_arg4"}, arg4, Operand{}, "")
+			l.emit(OpStore, Operand{Type: "variable", Value: "__mmap_arg5"}, arg5, Operand{}, "")
+			l.emit(OpStore, Operand{Type: "variable", Value: "__mmap_arg6"}, arg6, Operand{}, "")
+			dest := l.newReg()
+			l.emit(OpCall, dest, Operand{Type: "label", Value: "sys_mmap"}, arg1, "")
+			return dest
+		}
+
 		if !hasReceiver && len(e.Arguments) > 0 {
 			argReg = l.lowerExpression(e.Arguments[0])
 			isString := false

@@ -400,6 +400,118 @@ func (e *Emitter) generateTextSegment() []byte {
 				destOffset := sc.getOffset(inst.Dest)
 				code = append(code, 0x48, 0x89, 0x85)
 				code = append32(code, int32(destOffset))
+			} else if fnName == "sys_io_uring_setup" {
+				arg1Offset := sc.getOffset(inst.Src2)
+				code = append(code, 0x48, 0x8b, 0xbd) // mov rdi, [rbp + arg1Offset]
+				code = append32(code, int32(arg1Offset))
+
+				arg2Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__uring_setup_arg2"})
+				code = append(code, 0x48, 0x8b, 0xb5) // mov rsi, [rbp + arg2Offset]
+				code = append32(code, int32(arg2Offset))
+
+				code = append(code, 0xe8)
+				refs = append(refs, labelRef{
+					placeholderOffset: len(code),
+					targetLabel:       "sys_io_uring_setup",
+					isCall:            true,
+				})
+				code = append32(code, 0)
+
+				destOffset := sc.getOffset(inst.Dest)
+				code = append(code, 0x48, 0x89, 0x85)
+				code = append32(code, int32(destOffset))
+			} else if fnName == "sys_io_uring_enter" {
+				arg1Offset := sc.getOffset(inst.Src2)
+				code = append(code, 0x48, 0x8b, 0xbd) // mov rdi, [rbp + arg1Offset]
+				code = append32(code, int32(arg1Offset))
+
+				arg2Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__uring_enter_arg2"})
+				code = append(code, 0x48, 0x8b, 0xb5) // mov rsi, [rbp + arg2Offset]
+				code = append32(code, int32(arg2Offset))
+
+				arg3Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__uring_enter_arg3"})
+				code = append(code, 0x48, 0x8b, 0x95) // mov rdx, [rbp + arg3Offset]
+				code = append32(code, int32(arg3Offset))
+
+				arg4Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__uring_enter_arg4"})
+				code = append(code, 0x48, 0x8b, 0x8d) // mov rcx, [rbp + arg4Offset]
+				code = append32(code, int32(arg4Offset))
+
+				code = append(code, 0xe8)
+				refs = append(refs, labelRef{
+					placeholderOffset: len(code),
+					targetLabel:       "sys_io_uring_enter",
+					isCall:            true,
+				})
+				code = append32(code, 0)
+
+				destOffset := sc.getOffset(inst.Dest)
+				code = append(code, 0x48, 0x89, 0x85)
+				code = append32(code, int32(destOffset))
+			} else if fnName == "sys_io_uring_register" {
+				arg1Offset := sc.getOffset(inst.Src2)
+				code = append(code, 0x48, 0x8b, 0xbd) // mov rdi, [rbp + arg1Offset]
+				code = append32(code, int32(arg1Offset))
+
+				arg2Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__uring_reg_arg2"})
+				code = append(code, 0x48, 0x8b, 0xb5) // mov rsi, [rbp + arg2Offset]
+				code = append32(code, int32(arg2Offset))
+
+				arg3Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__uring_reg_arg3"})
+				code = append(code, 0x48, 0x8b, 0x95) // mov rdx, [rbp + arg3Offset]
+				code = append32(code, int32(arg3Offset))
+
+				arg4Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__uring_reg_arg4"})
+				code = append(code, 0x48, 0x8b, 0x8d) // mov rcx, [rbp + arg4Offset]
+				code = append32(code, int32(arg4Offset))
+
+				code = append(code, 0xe8)
+				refs = append(refs, labelRef{
+					placeholderOffset: len(code),
+					targetLabel:       "sys_io_uring_register",
+					isCall:            true,
+				})
+				code = append32(code, 0)
+
+				destOffset := sc.getOffset(inst.Dest)
+				code = append(code, 0x48, 0x89, 0x85)
+				code = append32(code, int32(destOffset))
+			} else if fnName == "sys_mmap" {
+				arg1Offset := sc.getOffset(inst.Src2)
+				code = append(code, 0x48, 0x8b, 0xbd) // mov rdi, [rbp + arg1Offset]
+				code = append32(code, int32(arg1Offset))
+
+				arg2Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__mmap_arg2"})
+				code = append(code, 0x48, 0x8b, 0xb5) // mov rsi, [rbp + arg2Offset]
+				code = append32(code, int32(arg2Offset))
+
+				arg3Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__mmap_arg3"})
+				code = append(code, 0x48, 0x8b, 0x95) // mov rdx, [rbp + arg3Offset]
+				code = append32(code, int32(arg3Offset))
+
+				arg4Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__mmap_arg4"})
+				code = append(code, 0x48, 0x8b, 0x8d) // mov rcx, [rbp + arg4Offset]
+				code = append32(code, int32(arg4Offset))
+
+				arg5Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__mmap_arg5"})
+				code = append(code, 0x4c, 0x8b, 0x85) // mov r8, [rbp + arg5Offset]
+				code = append32(code, int32(arg5Offset))
+
+				arg6Offset := sc.getOffset(ir.Operand{Type: "variable", Value: "__mmap_arg6"})
+				code = append(code, 0x4c, 0x8b, 0x8d) // mov r9, [rbp + arg6Offset]
+				code = append32(code, int32(arg6Offset))
+
+				code = append(code, 0xe8)
+				refs = append(refs, labelRef{
+					placeholderOffset: len(code),
+					targetLabel:       "sys_mmap",
+					isCall:            true,
+				})
+				code = append32(code, 0)
+
+				destOffset := sc.getOffset(inst.Dest)
+				code = append(code, 0x48, 0x89, 0x85)
+				code = append32(code, int32(destOffset))
 			} else {
 				// Load argument into RAX if present
 				if inst.Src2.Type != "" {
@@ -795,6 +907,45 @@ func (e *Emitter) generateTextSegment() []byte {
 		0xc3,                                     // ret
 	}
 	code = append(code, netCloseHelper...)
+
+	// Append sys_io_uring_setup helper
+	labelPCs["sys_io_uring_setup"] = len(code)
+	sysIouringSetupHelper := []byte{
+		0x48, 0xc7, 0xc0, 0xa9, 0x01, 0x00, 0x00, // mov rax, 425 (sys_io_uring_setup)
+		0x0f, 0x05,                               // syscall
+		0xc3,                                     // ret
+	}
+	code = append(code, sysIouringSetupHelper...)
+
+	// Append sys_io_uring_enter helper
+	labelPCs["sys_io_uring_enter"] = len(code)
+	sysIouringEnterHelper := []byte{
+		0x49, 0x89, 0xca,                         // mov r10, rcx
+		0x48, 0xc7, 0xc0, 0xaa, 0x01, 0x00, 0x00, // mov rax, 426 (sys_io_uring_enter)
+		0x0f, 0x05,                               // syscall
+		0xc3,                                     // ret
+	}
+	code = append(code, sysIouringEnterHelper...)
+
+	// Append sys_io_uring_register helper
+	labelPCs["sys_io_uring_register"] = len(code)
+	sysIouringRegisterHelper := []byte{
+		0x49, 0x89, 0xca,                         // mov r10, rcx
+		0x48, 0xc7, 0xc0, 0xab, 0x01, 0x00, 0x00, // mov rax, 427 (sys_io_uring_register)
+		0x0f, 0x05,                               // syscall
+		0xc3,                                     // ret
+	}
+	code = append(code, sysIouringRegisterHelper...)
+
+	// Append sys_mmap helper
+	labelPCs["sys_mmap"] = len(code)
+	sysMmapHelper := []byte{
+		0x49, 0x89, 0xca,                         // mov r10, rcx
+		0x48, 0xc7, 0xc0, 0x09, 0x00, 0x00, 0x00, // mov rax, 9 (sys_mmap)
+		0x0f, 0x05,                               // syscall
+		0xc3,                                     // ret
+	}
+	code = append(code, sysMmapHelper...)
 
 	// Append static data buffers
 	emptyStrPC := len(code)
