@@ -80,3 +80,45 @@ let z = x + y; // TYPE_MISMATCH
 		t.Errorf("expected TYPE_MISMATCH, got %s", checker.Errors()[0].ErrorCode)
 	}
 }
+
+func TestStructAlignment(t *testing.T) {
+	input := `
+type WorkerStats struct {
+	total_packets_processed int align(64)
+	total_errors_encountered int align(64)
+}
+`
+	l := lexer.New("test.ship", input)
+	p := parser.New(l)
+	file := p.ParseFile()
+
+	if len(p.Errors()) != 0 {
+		t.Fatalf("parser errors: %v", p.Errors())
+	}
+
+	checker := NewChecker()
+	checker.CheckFile(file)
+
+	if len(checker.Errors()) != 0 {
+		t.Fatalf("checker errors: %v", checker.Errors())
+	}
+
+	st, ok := checker.Structs["WorkerStats"]
+	if !ok {
+		t.Fatalf("struct WorkerStats not found")
+	}
+
+	fields := st.Fields()
+	if len(fields) != 2 {
+		t.Fatalf("expected 2 fields, got %d", len(fields))
+	}
+
+	if fields[0].Offset != 0 {
+		t.Errorf("expected field 0 offset to be 0, got %d", fields[0].Offset)
+	}
+
+	// Sits on next cache line boundary (64-byte alignment)
+	if fields[1].Offset != 64 {
+		t.Errorf("expected field 1 offset to be 64, got %d", fields[1].Offset)
+	}
+}

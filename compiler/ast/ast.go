@@ -22,8 +22,9 @@ type File struct {
 }
 
 type StructField struct {
-	Name token.Token // Identifier
-	Type token.Token // Type Identifier
+	Name      token.Token // Identifier
+	Type      token.Token // Type Identifier
+	Alignment int         // custom alignment constraint (e.g. 64)
 }
 
 type StructDecl struct {

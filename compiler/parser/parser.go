@@ -323,6 +323,18 @@ func (p *Parser) parseTypeDecl() *ast.StructDecl {
 			return nil
 		}
 		field.Type = p.curToken
+
+		if p.peekTokenIs(token.IDENT) && p.peekToken.Literal == "align" {
+			p.nextToken()
+			if p.expectPeek(token.LPAREN) {
+				if p.expectPeek(token.INT) {
+					alignVal, _ := strconv.Atoi(p.curToken.Literal)
+					field.Alignment = alignVal
+					p.expectPeek(token.RPAREN)
+				}
+			}
+		}
+
 		decl.Fields = append(decl.Fields, field)
 		p.nextToken()
 	}

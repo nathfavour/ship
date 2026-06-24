@@ -159,6 +159,10 @@ func (c *Checker) checkStructDecl(s *ast.StructDecl) {
 			c.reportError("UNKNOWN_TYPE", f.Type, map[string]interface{}{"type": f.Type.Literal})
 			return
 		}
+		if f.Alignment > 0 {
+			alignment := f.Alignment
+			offset = (offset + alignment - 1) & ^(alignment - 1)
+		}
 		st.fields = append(st.fields, StructFieldInfo{
 			Name:   f.Name.Literal,
 			Type:   fieldType,
